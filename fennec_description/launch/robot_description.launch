@@ -1,0 +1,11 @@
+<launch>
+    <!--<rosparam file= "$(find jetson_racer)/config/joints.yaml" command="load"/>-->
+    <!--<include file="$(find jetson_racer)/launch/ros_controllers.launch"></include>-->
+    <!--<include file="$(find jetson_racer)/launch/ros_controllers.launch"></include>-->
+    <!--<rosparam file= "$(find jetson_racer)/config/joints.yaml" command="load"/>-->
+    <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"></node> -->
+    <!-- <param name="robot_description" command="$(find xacro)/xacro  -->
+    <!--  -->
+    <!-- inorder '$(find fennec_description)/urdf/jetracer.xacro'"/> -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"></node>    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find fennec_description)/urdf/fennec.xacro'"/>
+</launch>

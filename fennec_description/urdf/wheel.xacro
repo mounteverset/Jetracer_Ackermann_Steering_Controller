@@ -5,8 +5,8 @@
 -->
 <robot name="wheel" xmlns:xacro="http://wiki.ros.org/xacro">
   <!-- Include xacro for materials and inertials -->
-  <xacro:include filename="$(find jetson_racer)/urdf/materials.xacro"/>
-  <xacro:include filename="$(find jetson_racer)/urdf/inertials.xacro"/>
+  <xacro:include filename="$(find fennec_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find fennec_description)/urdf/inertials.xacro"/>
 
   <!-- Properties -->
   <xacro:property name="steer_effort" value="10.0"/>
