@@ -8,16 +8,18 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  ackermann_msgs
-  geometry_msgs
-  nav_msgs
-  roscpp
-  std_msgs
-  hardware_interface
-  controller_manager
-  control_msgs
-  ros_control_boilerplate
-  urdf
+  ackermann_msgs REQUIRED
+  geometry_msgs REQUIRED
+  nav_msgs REQUIRED
+  roscpp REQUIRED
+  std_msgs REQUIRED
+  hardware_interface REQUIRED
+  controller_manager REQUIRED
+  control_msgs REQUIRED
+  ros_control_boilerplate REQUIRED
+  urdf REQUIRED
+  i2c_driver REQUIRED
+  pca9685_driver REQUIRED
 )
 
 ## System dependencies are found with CMake's conventions
@@ -110,9 +112,22 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES fennec_control
-CATKIN_DEPENDS ackermann_msgs geometry_msgs nav_msgs roscpp std_msgs hardware_interface controller_manager control_msgs ros_control_boilerplate urdf
+INCLUDE_DIRS include
+LIBRARIES  
+  fennec_hw_interface
+CATKIN_DEPENDS 
+  ackermann_msgs 
+  geometry_msgs 
+  nav_msgs 
+  roscpp 
+  std_msgs 
+  hardware_interface 
+  controller_manager 
+  control_msgs 
+  ros_control_boilerplate 
+  urdf 
+  i2c_driver 
+  pca9685_driver
 #  DEPENDS system_lib
 )
 
@@ -128,9 +143,13 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/fennec_control.cpp
-# )
+add_library(fennec_hw_interface
+  src/fennec_hw_interface.cpp
+)
+
+target_link_libraries(fennec_hw_interface
+  ${catkin_LIBRARIES}
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -140,11 +159,14 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(fennec_hw_main
-  include/fennec_control/fennec_hw_interface.h
-  src/fennec_hw_interface.cpp
-  src/fennec_hw_main.cpp)
+add_executable(fennec_hw_main  
+  src/fennec_hw_main.cpp
+  )
 
+target_link_libraries(fennec_hw_main
+  fennec_hw_interface
+  ${catkin_LIBRARIES}
+)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -155,10 +177,13 @@ add_executable(fennec_hw_main
 ## same as for the library above
 add_dependencies(fennec_hw_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(fennec_speed_test
+  src/fennec_speed_test.cpp)
+
+target_link_libraries(fennec_speed_test
+  ${catkin_LIBRARIES})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(fennec_hw_main
-  ${catkin_LIBRARIES}
-)
+
 
 #############
 ## Install ##

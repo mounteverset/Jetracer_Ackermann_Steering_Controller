@@ -11,7 +11,7 @@
 -->
 <robot name="fennec" xmlns:xacro="http://wiki.ros.org/xacro">
   <!-- Include xacro for inertials, materials and wheels -->
-  <xacro:include filename="$(find jetson_racer)/urdf/wheel.xacro"/>
+  <xacro:include filename="$(find fennec_description)/urdf/wheel.xacro"/>
 
 
   <!-- Gazebo plugins -->
