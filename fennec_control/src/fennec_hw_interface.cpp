@@ -189,12 +189,12 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
   // which equal 24,5 rad/s (2pi*3,9)
   // or 84 cm/s = 0,84 m/s
 
-  // input start = -3
+  // input start = -1
   // input end = 3
   // output start = -1
   // output end = 1
   // output = output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
-
+  
   float new_motor_pwm = -1.0 + ((2.0 / 6.0) * (joint_velocity_command_[0] + 3.0));
 
   // ROS_INFO_STREAM("The Vel Command from ROS Control is: " << joint_velocity_command_[0]);
@@ -203,36 +203,40 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
   // unclear wether to use set_pwm_pulse_in_microseconds or set_pwm_pulse
   if (new_motor_pwm > 0)
   {
-    m_pca9685_throttle_driver->set_pwm_pulse(0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm), static_cast<u_int16_t>(4096 * (1-new_motor_pwm))); // pwm
-    m_pca9685_throttle_driver->set_pwm_pulse(1, 0x0FFF, 0); // full on
-    m_pca9685_throttle_driver->set_pwm_pulse(2, 0, 0x0FFF); // full off
-    m_pca9685_throttle_driver->set_pwm_pulse(3, 0, 0x0FFF); // full off
-    m_pca9685_throttle_driver->set_pwm_pulse(4, static_cast<u_int16_t>(0x0FFF * new_motor_pwm), static_cast<u_int16_t>(0x0FFF * (1-new_motor_pwm))); // pwm
-    m_pca9685_throttle_driver->set_pwm_pulse(7, static_cast<u_int16_t>(0x0FFF * new_motor_pwm), static_cast<u_int16_t>(0x0FFF * (1-new_motor_pwm))); // pwm
-    m_pca9685_throttle_driver->set_pwm_pulse(6, 0x0FFF, 0); // full on
-    m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0x0FFF); // full off
+    m_pca9685_throttle_driver->set_pwm_pulse(0, 0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm)); // pwm 
+    m_pca9685_throttle_driver->set_pwm_pulse(1, 0, 0x0FFF); // full on
+    m_pca9685_throttle_driver->set_pwm_pulse(2, 0, 0); // full off
+    m_pca9685_throttle_driver->set_pwm_pulse(3, 0, 0); // full off
+    m_pca9685_throttle_driver->set_pwm_pulse(4, 0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm)); // pwm
+    m_pca9685_throttle_driver->set_pwm_pulse(7, 0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm)); // pwm
+    m_pca9685_throttle_driver->set_pwm_pulse(6, 0, 0x0FFF); // full on
+    m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0
+    
+    
+    ); // full off
   }
   else if (new_motor_pwm == 0)
   {
-    m_pca9685_throttle_driver->set_pwm_pulse(0, 0, 0x0FFF); //  full off
-    m_pca9685_throttle_driver->set_pwm_pulse(1, 0, 0x0FFF); //  full off
-    m_pca9685_throttle_driver->set_pwm_pulse(2, 0, 0x0FFF); //  full off
-    m_pca9685_throttle_driver->set_pwm_pulse(3, 0, 0x0FFF); //  full off
-    m_pca9685_throttle_driver->set_pwm_pulse(4, 0, 0x0FFF); //  full off
-    m_pca9685_throttle_driver->set_pwm_pulse(7, 0, 0x0FFF); //  full off
-    m_pca9685_throttle_driver->set_pwm_pulse(6, 0, 0x0FFF); //  full off
-    m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_all_channels_full_off();
+    // m_pca9685_throttle_driver->set_pwm_pulse(0, 0, 0x0FFF); //  full off
+    // m_pca9685_throttle_driver->set_pwm_pulse(1, 0, 0x0FFF); //  full off
+    // m_pca9685_throttle_driver->set_pwm_pulse(2, 0, 0x0FFF); //  full off
+    // m_pca9685_throttle_driver->set_pwm_pulse(3, 0, 0x0FFF); //  full off
+    // m_pca9685_throttle_driver->set_pwm_pulse(4, 0, 0x0FFF); //  full off
+    // m_pca9685_throttle_driver->set_pwm_pulse(7, 0, 0x0FFF); //  full off
+    // m_pca9685_throttle_driver->set_pwm_pulse(6, 0, 0x0FFF); //  full off
+    // m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0x0FFF); //  full off
   }
   else if (new_motor_pwm < 0)
   {
-    m_pca9685_throttle_driver->set_pwm_pulse(0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1), static_cast<u_int16_t>(0x0FFF * (1 - new_motor_pwm * -1))); 
-    m_pca9685_throttle_driver->set_pwm_pulse(1, 0, 0x0FFF); // off
-    m_pca9685_throttle_driver->set_pwm_pulse(2, 0x0FFF, 0); // on
-    m_pca9685_throttle_driver->set_pwm_pulse(3, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1), static_cast<u_int16_t>(0x0FFF * (1 - new_motor_pwm * -1)));
-    m_pca9685_throttle_driver->set_pwm_pulse(4, 0, 0x0FFF); // off
-    m_pca9685_throttle_driver->set_pwm_pulse(7, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1), static_cast<u_int16_t>(0x0FFF * (1 - new_motor_pwm * -1)));
-    m_pca9685_throttle_driver->set_pwm_pulse(6, 0, 0x0FFF); // off
-    m_pca9685_throttle_driver->set_pwm_pulse(5, 0x0FFF, 0); // on
+    m_pca9685_throttle_driver->set_pwm_pulse(0, 0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1)); 
+    m_pca9685_throttle_driver->set_pwm_pulse(1, 0, 0); // off
+    m_pca9685_throttle_driver->set_pwm_pulse(2, 0, 0x0FFF); // on -> turns high at 0, turns low at 4095 (last tick)
+    m_pca9685_throttle_driver->set_pwm_pulse(3, 0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1));
+    m_pca9685_throttle_driver->set_pwm_pulse(4, 0, 0); // off
+    m_pca9685_throttle_driver->set_pwm_pulse(7, 0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1));
+    m_pca9685_throttle_driver->set_pwm_pulse(6, 0, 0); // off
+    m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0x0FFF); // on
   }  
 }
 
