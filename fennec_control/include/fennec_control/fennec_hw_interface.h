@@ -54,7 +54,7 @@ public:
 
   void encoderCallback(const std_msgs::Int16::ConstPtr & msg);
 
- 
+  void printCommands();
 
 
   
