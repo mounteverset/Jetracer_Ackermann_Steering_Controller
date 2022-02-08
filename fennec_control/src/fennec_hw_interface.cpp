@@ -37,20 +37,20 @@ void FennecHWInterface::init()
   // Display the status
 	if (!open_success)
 	{
-		ROS_INFO_STREAM("[TEMPLATE I2C INTERNAL] FAILED to open I2C device named " << m_i2c_driver->get_device_name());
+		ROS_INFO_STREAM("FAILED to open I2C device named " << m_i2c_driver->get_device_name());
 	}
 	else
 	{
-		ROS_INFO_STREAM("[TEMPLATE I2C INTERNAL] Successfully opened named " << m_i2c_driver->get_device_name() << ", with file descriptor = " << m_i2c_driver->get_file_descriptor());
+		ROS_INFO_STREAM("Successfully opened named " << m_i2c_driver->get_device_name() << ", with file descriptor = " << m_i2c_driver->get_file_descriptor());
 	}
 
   // Encoder Motor Settings
-  float motor_freq = 200.0;
-  bool result_motor_init = m_pca9685_throttle_driver->initialise_with_frequency_in_hz(motor_freq, false);
+  float motor_freq = 600.0;
+  bool result_motor_init = m_pca9685_throttle_driver->initialise_with_frequency_in_hz(motor_freq, true);
 
   if (!result_motor_init)
 	{
-		ROS_INFO_STREAM("FAILED - while initialising servo driver with I2C address " << static_cast<int>(m_pca9685_throttle_driver->get_i2c_address()) );
+		ROS_INFO_STREAM("FAILED - while initialising throttle motor driver with I2C address " << static_cast<int>(m_pca9685_throttle_driver->get_i2c_address()) );
 	}
 
 
@@ -61,8 +61,13 @@ void FennecHWInterface::init()
 
   if (!result_servo_init)
 	{
-		ROS_INFO_STREAM("FAILED - while initialising servo driver with I2C address " << static_cast<int>(m_pca9685_servo_driver->get_i2c_address()));
+		ROS_INFO_STREAM("FAILED - while initialising servo motor driver with I2C address " << static_cast<int>(m_pca9685_servo_driver->get_i2c_address()));
 	}
+  else
+  {
+    ROS_INFO_STREAM("Success - while initialising servo motor driver with I2C address " << static_cast<int>(m_pca9685_servo_driver->get_i2c_address()));
+	}
+  
 
   // Joint Limits
   // std::vector<double> joint_position_lower_limits_;
@@ -80,7 +85,7 @@ void FennecHWInterface::init()
   ROS_INFO("FennecHWInterface Ready.");
 }
 
-// Get the Pulse Count from ROS Serial on the /encoder_pulses topic
+
 void FennecHWInterface::read(ros::Duration& elapsed_time)
 {
   // The want to overwrite the states
@@ -95,14 +100,24 @@ void FennecHWInterface::read(ros::Duration& elapsed_time)
   // std::vector<double> joint_effort_command_;
 
   // joint_names -> 0: rear_wheel_joint, 1: steer_wheel_joint
+  
+  // Velocity for Rear Wheels Important
+  ROS_INFO_STREAM("Reading this Joint_velocity for the rear wheels right now: " << joint_velocity_[0]);
+  ROS_INFO_STREAM("Num of pulses since last read: " << m_difference_num_pulses_since_last_read);
+  float distance_since_last_read = m_difference_num_pulses_since_last_read * PULSE_DISTANCE;
+  joint_velocity_[0] = distance_since_last_read / elapsed_time.toSec();
 
-  joint_velocity_[0] = m_difference_num_pulses_since_last_read * PULSE_DISTANCE;
 
-  // Do we need set these 2 values? The joint defintion probably should ignore them
-  joint_velocity_[1] = 0;
-  joint_position_[0] = 0;
-
-  joint_position_[1] = joint_position_command_[1];
+  //joint_velocity_[1] = 0; // TO DO
+  //joint_position_[0] = 0; 
+  uint16_t on_bytes = 0;
+  uint16_t off_bytes = 0;
+  uint16_t * on_byte_ptr = &on_bytes;
+  uint16_t * off_byte_ptr = &off_bytes;
+  m_pca9685_servo_driver->get_pwm_pulse(servo_channel, on_byte_ptr, off_byte_ptr);
+  ROS_INFO_STREAM("Num of on bytes: " << on_bytes);
+  ROS_INFO_STREAM("Num of off_bytes: " << off_bytes);
+  // joint_position_[1] = 0; // TO DO
 
   m_difference_num_pulses_since_last_read = 0;
 }
@@ -111,8 +126,8 @@ void FennecHWInterface::read(ros::Duration& elapsed_time)
 // Write to the PCA9685 the correct channel things
 void FennecHWInterface::write(ros::Duration& elapsed_time)
 {
-  double controller_velocity = joint_velocity_command_[0];
-  ROS_INFO_STREAM("The velocity value given by ROS Control: " << controller_velocity);
+  // double controller_velocity = joint_velocity_command_[0];
+  // ROS_INFO_STREAM("The velocity value given by ROS Control: " << controller_velocity);
 
   // Controlling the servo (PositionJointInterface)
   // The joint_position_command_ gives us a radian to work with 
@@ -121,15 +136,24 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
 
   // float input = joint_position_command_[1];
   
-  // input start = 0
-  // input end = 3.14
+  // input start = -1.570796327
+  // input end = 1.570796327
   // output start = 1000
   // output end = 2000
+  // output = output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
+
+  printCommands();
 
   pos_jnt_sat_interface_.enforceLimits(elapsed_time);
 
-  float new_servo_pwm = 1000 + ((2000-1000) / (3.14) * (joint_position_command_[1]));
+  float new_servo_pwm = 1000 + ((2000-1000) / (3.141) * (joint_position_command_[1] + 1.570));
 
+  // ROS_INFO_STREAM("The joint_position_command_[0] is: " << joint_position_command_[0] << " (Expected is 0.00)");
+  // ROS_INFO_STREAM("The joint_position_command_[1] is: " << joint_position_command_[1] << " Expexted is a value in rad from 0.3 to 2.81");
+  ROS_INFO_STREAM("The new servo pwm is: " << new_servo_pwm);
+
+  // Trim the values to fit in between 1000 and 2000
+  // 1000 == completely left, 2000 == completely right
   if (new_servo_pwm > 0)
 	{
 		if (new_servo_pwm < 1000)
@@ -137,9 +161,14 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
 		if (new_servo_pwm > 2000)
 			new_servo_pwm = 2000;
 	}
+  else if (new_servo_pwm == 0)
+  {
+    new_servo_pwm = 1500;
+  }
 
+  ROS_INFO_STREAM("Writing this value as pwm_pulse_in_microseconds: " << new_servo_pwm);
   // Call the function to set the desired pulse width
-	bool result = m_pca9685_servo_driver->set_pwm_pulse_in_microseconds(servo_channel, new_servo_pwm);
+	bool result = m_pca9685_servo_driver->set_pwm_pulse_in_microseconds(servo_channel, new_servo_pwm); // DONT FORGET!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
   // Display if an error occurred
@@ -158,23 +187,43 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
   // According to the speed test the motor at maximum pwm_pulse_width 
   // (tested with jetracer python library by nvidia/waveshare) turns 3,9 times/sec 
   // which equal 24,5 rad/s (2pi*3,9)
+  // or 84 cm/s = 0,84 m/s
 
-  float new_motor_pwm = (1 / 24,5 * joint_velocity_command_[1]);
+  // input start = -3
+  // input end = 3
+  // output start = -1
+  // output end = 1
+  // output = output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
 
+  float new_motor_pwm = -1.0 + ((2.0 / 6.0) * (joint_velocity_command_[0] + 3.0));
+
+  // ROS_INFO_STREAM("The Vel Command from ROS Control is: " << joint_velocity_command_[0]);
+  ROS_INFO_STREAM("The new rear motor pwm is: " << new_motor_pwm);
 
   // unclear wether to use set_pwm_pulse_in_microseconds or set_pwm_pulse
   if (new_motor_pwm > 0)
   {
-    m_pca9685_throttle_driver->set_pwm_pulse(1, static_cast<u_int16_t>(0x0FFF * new_motor_pwm), static_cast<u_int16_t>(4096 * (1-new_motor_pwm))); // pwm
-    m_pca9685_throttle_driver->set_pwm_pulse(0, 0x0FFF, 0); // full on
+    m_pca9685_throttle_driver->set_pwm_pulse(0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm), static_cast<u_int16_t>(4096 * (1-new_motor_pwm))); // pwm
+    m_pca9685_throttle_driver->set_pwm_pulse(1, 0x0FFF, 0); // full on
     m_pca9685_throttle_driver->set_pwm_pulse(2, 0, 0x0FFF); // full off
     m_pca9685_throttle_driver->set_pwm_pulse(3, 0, 0x0FFF); // full off
     m_pca9685_throttle_driver->set_pwm_pulse(4, static_cast<u_int16_t>(0x0FFF * new_motor_pwm), static_cast<u_int16_t>(0x0FFF * (1-new_motor_pwm))); // pwm
     m_pca9685_throttle_driver->set_pwm_pulse(7, static_cast<u_int16_t>(0x0FFF * new_motor_pwm), static_cast<u_int16_t>(0x0FFF * (1-new_motor_pwm))); // pwm
-    m_pca9685_throttle_driver->set_pwm_pulse(6, 0x0FFF, 0);
-    m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0x0FFF);
+    m_pca9685_throttle_driver->set_pwm_pulse(6, 0x0FFF, 0); // full on
+    m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0x0FFF); // full off
   }
-  else 
+  else if (new_motor_pwm == 0)
+  {
+    m_pca9685_throttle_driver->set_pwm_pulse(0, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_pwm_pulse(1, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_pwm_pulse(2, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_pwm_pulse(3, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_pwm_pulse(4, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_pwm_pulse(7, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_pwm_pulse(6, 0, 0x0FFF); //  full off
+    m_pca9685_throttle_driver->set_pwm_pulse(5, 0, 0x0FFF); //  full off
+  }
+  else if (new_motor_pwm < 0)
   {
     m_pca9685_throttle_driver->set_pwm_pulse(0, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1), static_cast<u_int16_t>(0x0FFF * (1 - new_motor_pwm * -1))); 
     m_pca9685_throttle_driver->set_pwm_pulse(1, 0, 0x0FFF); // off
@@ -184,8 +233,7 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
     m_pca9685_throttle_driver->set_pwm_pulse(7, static_cast<u_int16_t>(0x0FFF * new_motor_pwm * -1), static_cast<u_int16_t>(0x0FFF * (1 - new_motor_pwm * -1)));
     m_pca9685_throttle_driver->set_pwm_pulse(6, 0, 0x0FFF); // off
     m_pca9685_throttle_driver->set_pwm_pulse(5, 0x0FFF, 0); // on
-  }
-  
+  }  
 }
 
 void FennecHWInterface::enforceLimits(ros::Duration& period)
@@ -194,6 +242,16 @@ void FennecHWInterface::enforceLimits(ros::Duration& period)
   pos_jnt_sat_interface_.enforceLimits(period);
 }
 
+void FennecHWInterface::printCommands()
+{ 
+  ROS_INFO_STREAM("The length of joint_position_command_ is: " << joint_position_command_.size() << " (Expected is 2)");
+  ROS_INFO_STREAM("The joint_position_command_[0] is: " << joint_position_command_[0] << " (Expected is 0.00)");
+  ROS_INFO_STREAM("The joint_position_command_[1] is: " << joint_position_command_[1] << " Expexted is a value in rad from -0.4 and 0.4");
+  ROS_INFO_STREAM("The joint_velocity_command_[0] is: " << joint_velocity_command_[0] << " (Expected is a value in rad between -3 and 3)");
+  ROS_INFO_STREAM("The joint_velocity_command_[1] is: " << joint_position_command_[1] << " (Expected is 0.00)");
+  ROS_INFO_STREAM("The joint_effort_command_[0] is: " << joint_effort_command_[0] << " (Expected is 0.00)");
+  ROS_INFO_STREAM("The joint_effort_command_[1] is: " << joint_effort_command_[1] << " (Expected is 0.00)");
+}
 // Add the difference between the old m_num_ticks and the msg.data to total_num_ticks
 void FennecHWInterface::encoderCallback(const std_msgs::Int16ConstPtr & msg)
 {
