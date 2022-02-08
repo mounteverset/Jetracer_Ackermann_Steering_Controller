@@ -27,8 +27,8 @@ fennec:
     # These are both optional.
     # ackermann_steering_controller will attempt to read either one or both from the
     # URDF if not specified as a parameter.
-    wheel_separation_h : 1.0
-    wheel_radius : 0.4
+    wheel_separation_h : 0.25
+    wheel_radius : 0.04
 
     # Wheel separation and radius multipliers for odometry calibration.
     wheel_separation_h_multiplier: 1.0 # default: 1.0
@@ -52,11 +52,11 @@ fennec:
     linear:
       x:
         has_velocity_limits    : true
-        max_velocity           : 3.0  # m/s
-        min_velocity           : -3.0 # m/s
+        max_velocity           : 0.85  # m/s
+        min_velocity           : -0.85 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 0.8  # m/s^2
-        min_acceleration       : -0.8 # m/s^2
+        max_acceleration       : 1.6  # m/s^2
+        min_acceleration       : -1.6 # m/s^2
         has_jerk_limits        : true
         max_jerk               : 5.0 # m/s^3
 
@@ -65,6 +65,6 @@ fennec:
         has_velocity_limits    : true
         max_velocity           : 1.7  # rad/s
         has_acceleration_limits: true
-        max_acceleration       : 1.5  # rad/s^2
+        max_acceleration       : 3.0  # rad/s^2
         has_jerk_limits        : true
         max_jerk               : 2.5 # rad/s^3
