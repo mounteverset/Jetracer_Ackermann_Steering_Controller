@@ -8,10 +8,24 @@
     <!--  -->
     <!-- inorder '$(find fennec_description)/urdf/jetracer.xacro'"/> -->
     <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find fennec_description)/urdf/fennec.xacro'"/>
-    <node name="joint_state_publisher" pkg="joint_state_publisher" type="robot_state_publisher"></node>
+    <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"></node> -->
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
         respawn ="false" output="screen">
-        <remap from="/joint_states" to="/fennec/joint_states"></remap>
+        <!-- <remap from="/joint_states" to="/joint_states"></remap> -->
     </node>    
-    
+
+    <node pkg="tf" type="static_transform_publisher" name="front_right_steer_link_tf" args="0.135 -0.115 0.07   0 0 0 1                                             base_link front_right_steer_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="front_right_wheel_link_tf" args="0 0 -0.04           0.7071067811865476 0 0 0.7071067811865475            front_right_steer_link front_right_wheel_link 100" />
+
+    <node pkg="tf" type="static_transform_publisher" name="front_left_steer_link_tf" args="0.135 0.115 0.07     0 0 0 1                                             base_link front_left_steer_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="front_left_wheel_link_tf" args="0 0 -0.04            0.7071067811865476 0 0 0.7071067811865475            front_left_steer_link front_left_wheel_link 100" />
+
+    <node pkg="tf" type="static_transform_publisher" name="rear_left_wheel_link_tf" args="-0.135 0.115 0.03    0.7071067811865476 0 0 0.7071067811865475            base_link rear_left_wheel_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="rear_right_wheel_link_tf" args="-0.135 -0.115 0.03  0.7071067811865476 0 0 0.7071067811865475            base_link rear_right_wheel_link 100" />
+
+    <node pkg="tf" type="static_transform_publisher" name="rear_wheel_link_tf" args="-0.135 0 0.04                 0.7071067811865476 0 0 0.7071067811865475            base_link rear_wheel_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="front_steer_link_tf" args="0.135 0 0.07              0 0 0 1                                             base_link front_steer_link 100" />
+
+    <node pkg="tf" type="static_transform_publisher" name="camera_tf" args="0 0 0 0 0 0 1 base_link camera_link 100" />
+   <node pkg="tf" type="static_transform_publisher" name="laser_frame" args="0 0 0 0 0 0 1 base_link base_laser 100" />
 </launch>

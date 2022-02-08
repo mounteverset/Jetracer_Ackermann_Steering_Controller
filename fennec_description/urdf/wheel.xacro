@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!-- 
-  Robot model adapted from https://github.com/CIR-KIT/steer_drive_ros/blob/kinetic-devel/steer_drive_controller/test/common/urdf/wheel.xacro
+  Robot model adapted from https://github.com/CIR-KI0.124T/steer_drive_ros/blob/kinetic-devel/steer_drive_controller/test/common/urdf/wheel.xacro
 
 -->
 <robot name="wheel" xmlns:xacro="http://wiki.ros.org/xacro">
