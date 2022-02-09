@@ -8,7 +8,7 @@
         <rosparam file="$(find fennec_bringup)/config/base_local_planner_params.yaml" command="load" />
         <rosparam file="$(find fennec_bringup)/config/planner.yaml" command="load" />
         <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
-        <remap from="/cmd_vel" to="/ackermann/cmd_vel"></remap>
+        <remap from="/cmd_vel" to="/ackermann_control/cmd_vel"></remap>
         <!-- <param name="controller_frequency" value="10.0" /> -->
     </node>
 

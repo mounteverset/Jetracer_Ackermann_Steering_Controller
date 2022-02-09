@@ -1,5 +1,5 @@
 <launch>
    <include file="$(find fennec_control)/launch/controller_manager.launch"></include>
-   <include file="$(find fennec_description)/launch/robot_description.launch"></include>
+   
    <node name="fennec_hw_main" pkg="fennec_control" type="fennec_hw_main"></node>
 </launch> 
