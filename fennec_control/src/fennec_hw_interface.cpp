@@ -235,7 +235,7 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
   // float input_end = 1.7; // radians
   // float output_start = 1000; // left
   // float output_end = 2200; // right
-  float new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * ((joint_position_command_[1] * -1) - STEER_JOINT_COMMAND_INPUT_LOW);
+  float new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * ((joint_position_command_[1]) - STEER_JOINT_COMMAND_INPUT_LOW);
 
   // ROS_INFO_STREAM("The joint_position_command_[0] is: " << joint_position_command_[0] << " (Expected is 0.00)");
   // ROS_INFO_STREAM("The joint_position_command_[1] is: " << joint_position_command_[1] << " Expexted is a value in rad from 0.3 to 2.81");
