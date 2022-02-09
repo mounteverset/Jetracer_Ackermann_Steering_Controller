@@ -16,6 +16,8 @@
    
    <include file="$(find fennec_description)/launch/robot_description.launch"></include>
 
+   <include file="$(find fennec_bringup)/launch/rviz.launch"></include>
+
    <!-- <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
       <rosparam file="$(find fennec_bringup)/config/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
       <rosparam file="$(find fennec_bringup)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
