@@ -4,10 +4,15 @@
 // #include <ros.h>
 #include <ros_control_boilerplate/generic_hw_interface.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Bool.h>
 #include "i2c_driver/i2c_driver.h"
 #include "pca9685_driver/pca9685.h"
 #include <string>
 
+/**
+ * @brief General robot parameters
+ * 
+ */
 #define PULSE_DISTANCE 0.00031 // The robot moves 0,31mm per pulse
 #define PULSE_RADIAN 0.008975979 // The wheel turns 0,0089 rad per pulse
 #define STEERING_CHANNEL 0
@@ -15,18 +20,19 @@
 #define WHEEL_RADIUS 0.035
 #define DEG_TO_RAD 0.01745329251994329577
 
-
+/**
+ * @brief Values used to map to value ranges to one another 
+ * 
+ */
 #define STEER_JOINT_INPUT_START 204.0 // off_bytes low, steering is left
 #define STEER_JOINT_INPUT_END 450.0 // off_bytes high, steering is right
 #define STEER_JOINT_OUTPUT_START 24.0 // right max steer angle (degree)
 #define STEER_JOINT_OUTPUT_END -24.0 // left max steer angle (degree)
-
 #define STEER_JOINT_PULSE_WIDTH_LOW 1000.0 // left
 #define STEER_JOINT_PULSE_WIDTH_HIGH 2200.0 //right
 #define STEER_JOINT_COMMAND_INPUT_LOW 1.0 // left
 #define STEER_JOINT_COMMAND_INPUT_HIGH -1.0 // right
 #define STEER_JOINT_COMMAND_INPUT_TOLERANCE 0.01
-
 #define REAR_WHEEL_JOINT_MIN_SPEED 0.1
 
 namespace fennec_ns
@@ -70,9 +76,24 @@ public:
   /** \breif Enforce limits for all values before writing */
   virtual void enforceLimits(ros::Duration& period);
 
+  /**
+   * @brief Counts the pulses of the encoder. Gets called everytime the rosserial node publishes a new msg
+   * 
+   * @param msg The current number of pulses, counted by the Arduino, range is from -32768 to 32767
+   */
   void encoderCallback(const std_msgs::Int16::ConstPtr & msg);
 
+  /**
+   * @brief A helper function to print the ROS Controller Commands for each control loop to the console
+   * 
+   */
   void printCommands();
+
+  /**
+   * @brief Can be changed at runtime with a ROS Param
+   * 
+   */
+  bool logging;
 
 };  // class
 
