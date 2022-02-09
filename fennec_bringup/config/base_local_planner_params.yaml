@@ -12,7 +12,7 @@
 
 TebLocalPlannerROS:
 
-  odom_topic: odom
+  odom_topic: /ackermann_control/odom
   map_frame: /map
     
   # Trajectory
