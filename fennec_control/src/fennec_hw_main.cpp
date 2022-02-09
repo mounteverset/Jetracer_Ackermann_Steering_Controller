@@ -1,6 +1,14 @@
 #include <ros_control_boilerplate/generic_hw_control_loop.h>
 #include <fennec_control/fennec_hw_interface.h>
 
+
+/**
+ * @brief The main node which executes the hardware interface. This node uses the ros_control_boilerplate_generic HW loop.
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "fennec_hw_interface");

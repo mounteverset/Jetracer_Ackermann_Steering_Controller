@@ -27,5 +27,5 @@
     <node pkg="tf" type="static_transform_publisher" name="front_steer_link_tf" args="0.135 0 0.07              0 0 0 1                                             base_link front_steer_link 100" />
 
     <node pkg="tf" type="static_transform_publisher" name="camera_tf" args="0 0 0 0 0 0 1 base_link camera_link 100" />
-   <node pkg="tf" type="static_transform_publisher" name="laser_frame" args="0 0 0 0 0 0 1 base_link base_laser 100" />
+    <node pkg="tf" type="static_transform_publisher" name="laser_frame" args="0 0 0 0 0 0 1 base_link base_laser 100" />
 </launch>
