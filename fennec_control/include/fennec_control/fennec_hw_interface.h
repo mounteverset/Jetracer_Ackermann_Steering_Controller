@@ -49,19 +49,55 @@ public:
 
   virtual ~FennecHWInterface();
 
+  /**
+   * @brief The I2C Bus 1 is used by the PCA9685 boards
+   * 
+   */
   const char * m_i2c_device_name = "/dev/i2c-1";
+
+
   I2C_Driver * m_i2c_driver = new I2C_Driver(m_i2c_device_name);
+
+  /**
+   * @brief The default adress for a PCA9685 board
+   * 
+   */
   const uint8_t m_steering_pca9685_address = 0x40;
   PCA9685 * m_pca9685_servo_driver = new PCA9685(m_i2c_driver, m_steering_pca9685_address);
+
+  /**
+   * @brief The adress of the 2nd PCA9685 board
+   * 
+   */
   const uint8_t m_throttle_pca9685_address = 0x60;
   PCA9685 * m_pca9685_throttle_driver = new PCA9685(m_i2c_driver, m_throttle_pca9685_address);
+
+  /**
+   * @brief Needed for calculating the driven rear wheel distance
+   * 
+   */
   int16_t m_old_num_pulses;
+
+  /**
+   * @brief Needed for calculating the driven rear wheel distance
+   * 
+   */
   int m_difference_num_of_pulses;
+
+  /**
+   * @brief Needed for calculating the driven rear wheel distance
+   * 
+   */
   int m_difference_num_pulses_since_last_read;
 
   const u_int8_t servo_channel = 0;
   //long m_total_number_of_pulses; 
 
+
+  /**
+   * @brief Subscriber to the /encoder_pulses topic, which is published by the Arduino
+   * 
+   */
   ros::Subscriber rosserial_sub;
 
   /** \brief Initialize the robot hardware interface */
