@@ -28,10 +28,9 @@
       <param name="controller_frequency" value="10.0" />
    </node> -->
 
-    <node pkg="rosserial_python" type="serial_node.py" name="serial_node">
+    <!-- <node pkg="rosserial_python" type="serial_node.py" name="serial_node">
         <param name="_port" type="string" value="/dev/ttyACM0"/>
         <param name="_baud" type="int" value="115200"/>
-    </node>
+    </node> -->
 
-    
 </launch> 
