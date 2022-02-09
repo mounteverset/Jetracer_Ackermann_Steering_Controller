@@ -16,15 +16,18 @@
 #define DEG_TO_RAD 0.01745329251994329577
 
 
-#define STEER_JOINT_INPUT_START 204.0 // off_bytes low
-#define STEER_JOINT_INPUT_END 450.0 // off_bytes high
-#define STEER_JOINT_OUTPUT_START -26.0 // left max steer angle (degree)
-#define STEER_JOINT_OUTPUT_END 26.0 // right max steer angle (degree)
+#define STEER_JOINT_INPUT_START 204.0 // off_bytes low, steering is left
+#define STEER_JOINT_INPUT_END 450.0 // off_bytes high, steering is right
+#define STEER_JOINT_OUTPUT_START 24.0 // right max steer angle (degree)
+#define STEER_JOINT_OUTPUT_END -24.0 // left max steer angle (degree)
 
 #define STEER_JOINT_PULSE_WIDTH_LOW 1000.0 // left
 #define STEER_JOINT_PULSE_WIDTH_HIGH 2200.0 //right
-#define STEER_JOINT_COMMAND_INPUT_LOW -1.7
-#define STEER_JOINT_COMMAND_INPUT_HIGH 1.7
+#define STEER_JOINT_COMMAND_INPUT_LOW 1.0 // left
+#define STEER_JOINT_COMMAND_INPUT_HIGH -1.0 // right
+#define STEER_JOINT_COMMAND_INPUT_TOLERANCE 0.01
+
+#define REAR_WHEEL_JOINT_MIN_SPEED 0.1
 
 namespace fennec_ns
 {
