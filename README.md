@@ -115,7 +115,7 @@ Adding the statement to the .bashrc both on the Host and Client makes sense, e.g
 
 - You can then see the robot representation and the generated map in Rviz and send navigation goals to let the robot drive there
 
-
+![Encoder to Arduino](/resources/rviz.png)
 
 
 
