@@ -12,7 +12,7 @@
 
 TebLocalPlannerROS:
 
-  odom_topic: odom
+  odom_topic: /ackermann_control/odom
   map_frame: /map
     
   # Trajectory
@@ -24,14 +24,18 @@ TebLocalPlannerROS:
   max_global_plan_lookahead_dist: 3.0
   feasibility_check_no_poses: 5
   allow_init_with_backwards_motion: True
-  # Robot
-          
-  max_vel_x: 0.30
-  max_vel_x_backwards: 0.30
-  max_vel_theta: 1.0
-  acc_lim_x: 0.6
-  acc_lim_theta: 1.0
-  min_turning_radius: 0.37
+
+  # Interesting for future implemantion 
+  # wheelbase: 0.24
+  # cmd_angle_instead_rotvel: true # this sends steering commands directly instead of angular_z
+
+  # Robot          
+  max_vel_x: 0.4
+  max_vel_x_backwards: -0.4
+  max_vel_theta: 3
+  acc_lim_x: 1.0
+  acc_lim_theta: 2.0
+  min_turning_radius: 0.44
   footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     type: "circular"
     radius: 0.16 # for type "circular"
@@ -72,10 +76,10 @@ TebLocalPlannerROS:
   weight_acc_lim_x: 1
   weight_acc_lim_theta: 1
   weight_kinematics_nh: 1000
-  weight_kinematics_forward_drive: 1000
+  weight_kinematics_forward_drive: 1
   weight_kinematics_turning_radius: 1
   weight_optimaltime: 1
-  weight_obstacle: 500
+  weight_obstacle: 50
   weight_dynamic_obstacle: 10 # not in use yet
   alternative_time_cost: False # not in use yet
   weight_shortest_path: 1
