@@ -96,21 +96,15 @@ void FennecHWInterface::read(ros::Duration& elapsed_time)
   ROS_INFO_STREAM("###########################################################################################");
   ROS_INFO_STREAM("###########################  READING THE JOINT INFORMATION  ###############################");
   ROS_INFO_STREAM("###########################################################################################");
-  // The want to overwrite the states
-  // // States
+  // We want to overwrite the states of the robot stored in these variables
   // std::vector<double> joint_position_;
   // std::vector<double> joint_velocity_;
   // std::vector<double> joint_effort_;
 
-  // // Commands
-  // std::vector<double> joint_position_command_;
-  // std::vector<double> joint_velocity_command_;
-  // std::vector<double> joint_effort_command_;
-
-  // joint_names -> 0: front_steer_joint, 1: rear_wheel_joint
+  // Joint index 0: front_steer_joint, 1: rear_wheel_joint
   
   // Rear Joint Readings
-  // ros::spinOnce();
+
   ROS_INFO_STREAM("Elapsed Time since last read: " << elapsed_time.toSec());
   ROS_INFO_STREAM("Reading this Joint_velocity for the rear wheels right now: " << joint_velocity_[0]);
   ROS_INFO_STREAM("Num of pulses since last read: " << m_difference_num_pulses_since_last_read); 
@@ -152,15 +146,17 @@ void FennecHWInterface::read(ros::Duration& elapsed_time)
   ROS_INFO_STREAM("Num of on bytes: " << on_bytes);
   ROS_INFO_STREAM("Num of off_bytes: " << off_bytes);
 
-  // input start = 204
-  // input end = 409
-  // output start = -24
-  // output end = 24
   // output = output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
 
   float steering_angle = STEER_JOINT_OUTPUT_START + ((STEER_JOINT_OUTPUT_END - STEER_JOINT_OUTPUT_START) / (STEER_JOINT_INPUT_END - STEER_JOINT_INPUT_START)) * (off_bytes - STEER_JOINT_INPUT_START);
 
   // float steering_angle = 0.234146341 * off_bytes - 71.765853659;
+
+  // We have the problem that when the robot is driving backwards the odometry only cares for the rad/s (the change of rad/s to be specific)
+  // for that when we update the joint position and velocity we have to take into account in which direction we are driving
+  // If we are driving backwards we want to reverse the rad/s
+  // For forward driving we dont have to change anything
+  // One big if else block should be sufficient we have the velocity anyway
 
   float velocity_in_meter_per_sec = (rad_since_last_read * WHEEL_RADIUS) / elapsed_time.toSec();
   float angular_vel = velocity_in_meter_per_sec * tan(steering_angle * DEG_TO_RAD) / WHEELBASE;
@@ -170,24 +166,41 @@ void FennecHWInterface::read(ros::Duration& elapsed_time)
     ROS_INFO_STREAM("This is the calculated steering angle: " << steering_angle * DEG_TO_RAD << ". It lies outside of the possible value range.");
     // joint_position_[0] = 0.0;
   }
-  else if (steering_angle > - 1 && steering_angle < 1)
-  {
-    // helps with setting the control command to zero without constantly re-regulating -> hysteresis
-    joint_position_[1] = 0.0;
-  }
+  // helps with setting the control command to zero without constantly re-regulating -> hysteresis
+  // else if (steering_angle > -0.5 && steering_angle < 0.5)
+  // {
+  //   joint_position_[1] = 0.0;
+  // }
   else
   {
-    joint_position_[1] = steering_angle * DEG_TO_RAD;
+    if (velocity_in_meter_per_sec >= 0)
+    {
+      joint_position_[1] = steering_angle * DEG_TO_RAD;
+    // joint_position_[1] = steering_angle * DEG_TO_RAD;
+    }
+    if (velocity_in_meter_per_sec < 0)
+    {
+      joint_position_[1] = steering_angle * DEG_TO_RAD; // * -1?
+    }
   }
 
   if (angular_vel < -2.0 || angular_vel > 2.0)
   {
     ROS_INFO_STREAM("This is the calculated angular_vel: " << angular_vel << ". It lies outside of the possible value range.");
-    joint_velocity_[1] = 0.0;
+    // joint_velocity_[1] = 0.0;
   }
   else
   {
-  joint_velocity_[1] = angular_vel; 
+    if (velocity_in_meter_per_sec < 0)
+    {
+      joint_velocity_[1] = angular_vel; 
+    }
+    else 
+    {
+      joint_velocity_[1] = angular_vel; 
+    }
+
+
   }
 
   ROS_INFO_STREAM("steering angle in rad: " << steering_angle * DEG_TO_RAD);
@@ -231,48 +244,66 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
 
   pos_jnt_sat_interface_.enforceLimits(elapsed_time);
 
-  // float input_start = -1.7; // radians
-  // float input_end = 1.7; // radians
+  // float input_start = -1.0; // right in radians
+  // float input_end = 1.0; // left in radians
   // float output_start = 1000; // left
   // float output_end = 2200; // right
-  float new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * ((joint_position_command_[1]) - STEER_JOINT_COMMAND_INPUT_LOW);
 
-  // ROS_INFO_STREAM("The joint_position_command_[0] is: " << joint_position_command_[0] << " (Expected is 0.00)");
-  // ROS_INFO_STREAM("The joint_position_command_[1] is: " << joint_position_command_[1] << " Expexted is a value in rad from 0.3 to 2.81");
-  ROS_INFO_STREAM("The new servo pwm is: " << new_servo_pwm);
-
-  // Trim the values to fit in between 1000 and 2000
-  // 1000 == completely left, 2000 == completely right
-  if (new_servo_pwm > 0)
-	{
-		if (new_servo_pwm < 1000)
-			new_servo_pwm = 1000;
-		if (new_servo_pwm > 2200)
-			new_servo_pwm = 2200;
-	}
-  else if (new_servo_pwm == 0)
+  float new_servo_pwm;
+  // define a window of no action by having a "deadzone" between two values around zero
+  if (joint_position_command_[1] < STEER_JOINT_COMMAND_INPUT_TOLERANCE && joint_position_command_[1] > -STEER_JOINT_COMMAND_INPUT_TOLERANCE)
   {
     new_servo_pwm = 1600;
   }
 
+  if (joint_velocity_command_[0] >= 0)
+  {
+    // Driving forward, positive steering command equals a positive rad/s
+    // Mapping the value range from the input (1.0 to -1.0) to the pwm in microsec (1000 to 2200)
+    new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * (joint_position_command_[1] - STEER_JOINT_COMMAND_INPUT_LOW);
+  }
+  else if (joint_velocity_command_[0] < 0)
+  {
+    // Driving backwards, positive steering command equals a negative rad/s
+    // move_base only sends what it wants as output, it does not care how we get there
+    // hence, it does not take into account which way we are moving
+    // Mapping the value range from the input (1.0 to -1.0) to the pwm in microsec (1000 to 2200), but inverting the input
+    new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * ((joint_position_command_[1] * -1) - STEER_JOINT_COMMAND_INPUT_LOW);
+  
+
+  ROS_INFO_STREAM("The new servo pwm is: " << new_servo_pwm);
+
+  // Trim the values to fit in between 1000 and 2200
+  // 1000 == completely left, 2200 == completely right
+  if (new_servo_pwm > 0)
+	{
+		if (new_servo_pwm < STEER_JOINT_PULSE_WIDTH_LOW)
+			new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW;
+		if (new_servo_pwm > STEER_JOINT_PULSE_WIDTH_HIGH)
+			new_servo_pwm = STEER_JOINT_PULSE_WIDTH_HIGH;
+	}
+  // else if (new_servo_pwm == 0)
+  // {
+  //   new_servo_pwm = 1600;
+  // }
+
   ROS_INFO_STREAM("Writing this value as pwm_pulse_in_microseconds: " << new_servo_pwm);
+
   // Call the function to set the desired pulse width
 	bool result = m_pca9685_servo_driver->set_pwm_pulse_in_microseconds(servo_channel, new_servo_pwm);
-
-
   // Display if an error occurred
 	if (!result)
 	{
 		ROS_INFO_STREAM("FAILED to set pulse width for servo at channel " << static_cast<int>(STEERING_CHANNEL) );
 	}
 
-
   // DC Motors
-  // std::vector<double> joint_velocity_command_
+  // std::vector<double> joint_velocity_command_[0]
   // unit is rad/s
   // e.g. 6.28/sec = 1 rev/sec
-  // this equal 700 pulses by the encoder
+  // 1 revolution equal 700 pulses by the encoder
   // at 1600hz for the motors the maximum pwm in 0,000625s = 0,625ms = 625 microseconds
+  //
   // According to the speed test the motor at maximum pwm_pulse_width 
   // (tested with jetracer python library by nvidia/waveshare) turns 3,9 times/sec 
   // which equal 24,5 rad/s (2pi*3,9)
@@ -290,8 +321,24 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
   //float new_motor_pwm = output_start + ((output_end - output_start) / (input_end - input_start)) * (joint_velocity_command_[0] - input_start);
 
   float new_motor_pwm = -0.040816327 * joint_velocity_command_[0];
+
+  if (new_motor_pwm < REAR_WHEEL_JOINT_MIN_SPEED && new_motor_pwm > -REAR_WHEEL_JOINT_MIN_SPEED)
+  {
+    if (joint_velocity_command_[0] == 0)
+    {
+      new_motor_pwm = 0;
+    }
+    else if (new_motor_pwm < 0)
+    {
+      new_motor_pwm = -REAR_WHEEL_JOINT_MIN_SPEED;
+    }
+    else if (new_motor_pwm > 0)
+    {
+      new_motor_pwm = REAR_WHEEL_JOINT_MIN_SPEED;
+    }
+  }
+
   // Wheels are turning the opposite way if not
-  // ROS_INFO_STREAM("The Vel Command from ROS Control is: " << joint_velocity_command_[0]);
   ROS_INFO_STREAM("The new rear motor pwm is: " << new_motor_pwm);
 
   // unclear wether to use set_pwm_pulse_in_microseconds or set_pwm_pulse
@@ -349,9 +396,9 @@ void FennecHWInterface::printCommands()
   ROS_INFO_STREAM("###########################################################################################");
   // ROS_INFO_STREAM("The length of joint_position_command_ is: " << joint_position_command_.size() << " (Expected is 2)");
   ROS_INFO_STREAM("The joint_position_command_[0] is: " << joint_position_command_[0] << " | Expexted: 0.0");
-  ROS_INFO_STREAM("The joint_position_command_[1] is: " << joint_position_command_[1] << " | Expexted: rad/s from -1.7 and 1.7");
+  ROS_INFO_STREAM("The joint_position_command_[1] is: " << joint_position_command_[1] << " | Expexted: rad/s from -1.0 and 1.0");
   ROS_INFO_STREAM("The joint_velocity_command_[0] is: " << joint_velocity_command_[0] << " | Expected: rad/s -24.5 to 24.5");
-  ROS_INFO_STREAM("The joint_velocity_command_[1] is: " << joint_position_command_[1] << " | Expected: rad/s from -1.7 and 1.7");
+  ROS_INFO_STREAM("The joint_velocity_command_[1] is: " << joint_position_command_[1] << " | Expected: rad/s from -1.0 and 1.0");
   ROS_INFO_STREAM("The joint_effort_command_[0] is: " << joint_effort_command_[0] << " | Expected is 0.00");
   ROS_INFO_STREAM("The joint_effort_command_[1] is: " << joint_effort_command_[1] << " | Expected is 0.00");
 }
