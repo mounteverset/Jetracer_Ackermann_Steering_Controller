@@ -1,6 +1,13 @@
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
 
+/**
+ * @brief A testfile to determine the max speed of the new encoder motors
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main(int argc, char **argv)
 {
 
