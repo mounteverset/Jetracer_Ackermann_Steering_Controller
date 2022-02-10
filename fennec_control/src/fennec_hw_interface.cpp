@@ -219,33 +219,35 @@ void FennecHWInterface::write(ros::Duration& elapsed_time)
   pos_jnt_sat_interface_.enforceLimits(elapsed_time);
 
   // output = output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
-  // input_start = -1.0; // right in radians
-  // input_end = 1.0; // left in radians
+  // input_start = -1.57; // left
+  // input_end = 1.57; // right
   // output_start = 1000; // left
   // output_end = 2200; // right
 
   float new_servo_pwm;
 
   // define a window of no action by having a "deadzone" between two values around zero
-  if (joint_position_command_[1] < STEER_JOINT_COMMAND_INPUT_TOLERANCE && joint_position_command_[1] > -STEER_JOINT_COMMAND_INPUT_TOLERANCE)
-  {
-    new_servo_pwm = 1600;
-  }
+  // if (joint_position_command_[1] < STEER_JOINT_COMMAND_INPUT_TOLERANCE && joint_position_command_[1] > -STEER_JOINT_COMMAND_INPUT_TOLERANCE)
+  // {
+  //   new_servo_pwm = 1600;
+  // }
 
   // Driving forward, positive steering command equals a positive rad/s
   // Mapping the value range from the input (1.0 to -1.0) to the pwm in microsec (1000 to 2200)
-  if (joint_velocity_command_[0] >= 0)
-  {
-    new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * (joint_position_command_[1] - STEER_JOINT_COMMAND_INPUT_LOW);
-  }
+  // if (joint_velocity_command_[0] >= 0)
+  // {
+  //   new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * (joint_position_command_[1] - STEER_JOINT_COMMAND_INPUT_LOW);
+  // }
   // Driving backwards, positive steering command equals a negative rad/s
   // move_base only sends what it wants as output, it does not care how we get there
   // hence, it does not take into account which way we are moving
   // Mapping the value range from the input (1.0 to -1.0) to the pwm in microsec (1000 to 2200), but inverting the input
-  else if (joint_velocity_command_[0] < 0)
-  {
-    new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * ((joint_position_command_[1] * -1) - STEER_JOINT_COMMAND_INPUT_LOW);
-  }
+  // else if (joint_velocity_command_[0] < 0)
+  // {
+  //   new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * ((joint_position_command_[1] * -1) - STEER_JOINT_COMMAND_INPUT_LOW);
+  // }
+
+  new_servo_pwm = STEER_JOINT_PULSE_WIDTH_LOW + ((STEER_JOINT_PULSE_WIDTH_HIGH - STEER_JOINT_PULSE_WIDTH_LOW) / (STEER_JOINT_COMMAND_INPUT_HIGH - STEER_JOINT_COMMAND_INPUT_LOW)) * (joint_position_command_[1] - STEER_JOINT_COMMAND_INPUT_LOW);
 
   // Trim the values to fit in between 1000 and 2200
   // 1000 == completely left, 2200 == completely right
