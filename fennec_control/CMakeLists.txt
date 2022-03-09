@@ -151,6 +151,15 @@ target_link_libraries(fennec_hw_interface
   ${catkin_LIBRARIES}
 )
 
+
+add_library(sim_fennec_hw_interface
+  src/sim_fennec_hw_interface.cpp
+)
+
+target_link_libraries(sim_fennec_hw_interface
+  ${catkin_LIBRARIES}
+)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -167,6 +176,16 @@ target_link_libraries(fennec_hw_main
   fennec_hw_interface
   ${catkin_LIBRARIES}
 )
+
+add_executable(sim_fennec_hw_main
+  src/sim_fennec_hw_main.cpp
+)
+
+target_link_libraries(sim_fennec_hw_main
+  sim_fennec_hw_interface
+  ${catkin_LIBRARIES}
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -176,6 +195,8 @@ target_link_libraries(fennec_hw_main
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(fennec_hw_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(sim_fennec_hw_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(fennec_speed_test
   src/fennec_speed_test.cpp)

@@ -12,7 +12,7 @@
 
         <!-- <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" /> -->
         <remap from="/cmd_vel" to="/ackermann_control/cmd_vel"></remap>
-        <remap from="/odom" to="/ackermann_control/odom"></remap>
+        <remap from="/odom" to="odometry/filtered"></remap>
         <!-- <param name="controller_frequency" value="10.0" /> -->
     </node>
 
@@ -52,5 +52,5 @@
     <node pkg="robot_localization" type="ekf_localization_node" name="robot_localization" output="screen">
       <rosparam file="$(find fennec_bringup)/config/robot_localization.yaml" command="load" />
     </node>
-    
+
 </launch> 

@@ -30,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -250,7 +250,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: map
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -273,21 +273,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
-      Class: rviz/TopDownOrtho
+      Class: rviz/Orbit
+      Distance: 1.2292944192886353
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 0.010550814680755138
+        Y: 0.47658708691596985
+        Z: -0.000244140625
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 292.40191650390625
+      Pitch: 0.09479763358831406
       Target Frame: <Fixed Frame>
-      Value: TopDownOrtho (rviz)
-      X: 0.010550814680755138
-      Y: 0.47658708691596985
+      Value: Orbit (rviz)
+      Yaw: 4.60817813873291
     Saved: ~
 Window Geometry:
   Displays:
